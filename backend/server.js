@@ -12,31 +12,20 @@ dotenv.config();
 
 const app = express();
 
-// ===== CORS CONFIG (FINAL) =====
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://cloudvault-seven.vercel.app",
-];
-
+// ===== CORS (FINAL & EXPRESS 5 SAFE) =====
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (Postman, server-to-server)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      } else {
-        return callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: [
+      "http://localhost:5173",
+      "https://cloudvault-seven.vercel.app",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// 🔥 THIS LINE IS MANDATORY (preflight)
-// app.options("*", cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
