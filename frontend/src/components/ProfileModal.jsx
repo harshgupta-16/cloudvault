@@ -1,17 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function ProfileModal({ isOpen, onClose, user }) {
+export default function ProfileModal({ isOpen, onClose, user, setAvatar, avatar }) {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-
-  const [avatar, setAvatar] = useState(null);
-
-  // Load saved avatar
-  useEffect(() => {
-    const saved = localStorage.getItem("avatar");
-    if (saved) setAvatar(saved);
-  }, []);
 
   if (!isOpen) return null;
 
@@ -30,22 +22,21 @@ export default function ProfileModal({ isOpen, onClose, user }) {
     }
 
     const imageUrl = URL.createObjectURL(file);
+
+    // 🔥 Update Topbar immediately
     setAvatar(imageUrl);
+
+    // Persist for reload
     localStorage.setItem("avatar", imageUrl);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-
       {/* BACKDROP */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       {/* MODAL */}
       <div className="relative w-[90%] max-w-sm bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl">
-
         {/* CLOSE */}
         <button
           onClick={onClose}
@@ -58,14 +49,15 @@ export default function ProfileModal({ isOpen, onClose, user }) {
         <div className="flex flex-col items-center">
           <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-300 dark:bg-gray-700 flex items-center justify-center mb-3">
             {avatar ? (
-              <img
-                src={avatar}
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-4xl">👤</span>
-            )}
+  <img
+    src={avatar}
+    alt="Profile"
+    className="w-full h-full object-cover"
+  />
+) : (
+  <span className="text-4xl">👤</span>
+)}
+
           </div>
 
           {/* Hidden file input */}

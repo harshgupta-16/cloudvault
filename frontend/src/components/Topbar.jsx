@@ -9,7 +9,10 @@ export default function TopBar() {
 
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState(null);
-  const [avatar, setAvatar] = useState(null);
+
+  const [avatar, setAvatar] = useState(() => {
+    return localStorage.getItem("avatar");
+  });
 
   const token = localStorage.getItem("token");
 
@@ -24,9 +27,6 @@ export default function TopBar() {
         email: payload.email,
       });
     } catch {}
-
-    const savedAvatar = localStorage.getItem("avatar");
-    if (savedAvatar) setAvatar(savedAvatar);
   }, [token]);
 
   // Hide on auth pages or if not logged in
@@ -38,7 +38,6 @@ export default function TopBar() {
   return (
     <>
       <div className="fixed top-4 right-4 flex items-center gap-3 z-40">
-
         {/* THEME TOGGLE */}
         <button
           onClick={toggleTheme}
@@ -64,11 +63,14 @@ export default function TopBar() {
         </button>
       </div>
 
-      <ProfileModal
-        isOpen={showProfile}
-        onClose={() => setShowProfile(false)}
-        user={user}
-      />
+<ProfileModal
+  isOpen={showProfile}
+  onClose={() => setShowProfile(false)}
+  user={user}
+  avatar={avatar}        // 🔥 ADD THIS
+  setAvatar={setAvatar}  // 🔥 KEEP THIS
+/>
+
     </>
   );
 }
