@@ -15,7 +15,7 @@ export default function Login() {
     }
 
     try {
-      const res = await fetch("https://cloudvault-ytgi.onrender.com/auth/login", {
+      const res = await fetch("https://cloudvault-backend-0yy6.onrender.com/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
