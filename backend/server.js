@@ -12,23 +12,24 @@ dotenv.config();
 
 const app = express();
 
-// ===== CORS (FINAL & EXPRESS 5 SAFE) =====
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://cloudvault-seven.vercel.app",
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+// ===== GLOBAL CORS (FINAL) =====
+app.use(cors({
+  origin: true, // allow ALL origins (frontend decides security)
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
+// Explicit preflight support (Express 5 safe)
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 
 // Connect to MongoDB
