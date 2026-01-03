@@ -12,18 +12,35 @@ dotenv.config();
 
 const app = express();
 
-// Middleware (must be before routes)
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://cloudvault-seven.vercel.app"
-  ],
-  credentials: true,
-}));
+// ===== CORS CONFIG (FINAL) =====
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://cloudvault-seven.vercel.app",
+];
 
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (Postman, server-to-server)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+// 🔥 THIS LINE IS MANDATORY (preflight)
+app.options("*", cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
