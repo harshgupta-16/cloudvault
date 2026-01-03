@@ -171,6 +171,24 @@ export default function Dashboard() {
     return "📄";
   };
 
+const formatDateTime = (isoString) => {
+  if (!isoString) return "—";
+
+  const date = new Date(isoString);
+  if (isNaN(date)) return "—";
+
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+
+
   /* ================= UI ================= */
 
   return (
@@ -236,7 +254,7 @@ export default function Dashboard() {
                 onClick={() =>
                   setActiveNote({ title: "", content: "" })
                 }
-                className="bg-yellow-500 text-black px-4 py-2 rounded-lg"
+                className="bg-yellow-500 text-black px-4 py-2 rounded-lg absolute bottom-6 right-6"
               >
                 New Note
               </button>
@@ -252,9 +270,16 @@ export default function Dashboard() {
                     onClick={() => setActiveNote(note)}
                     className="bg-gray-100 p-4 rounded-xl cursor-pointer hover:shadow"
                   >
-                    <h3 className="font-semibold truncate">
-                      {note.title}
-                    </h3>
+                    <div className="flex justify-between items-start gap-2">
+  <h3 className="font-semibold truncate max-w-[70%]">
+    {note.title}
+  </h3>
+
+  <span className="text-xs text-gray-400 whitespace-nowrap">
+    {formatDateTime(note.updatedAt)}
+  </span>
+</div>
+
                     <p className="text-sm text-gray-500 line-clamp-3 mt-1">
                       {note.content || "No content"}
                     </p>
