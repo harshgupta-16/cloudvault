@@ -16,11 +16,12 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://cloudvault-zeta.vercel.app"
+    "https://cloudvault-seven.vercel.app"
   ],
   credentials: true,
 }));
 
+app.use(cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
