@@ -26,30 +26,40 @@ export default function TopBar() {
         name: payload.name || "User",
         email: payload.email,
       });
-    } catch {}
+    } catch { }
   }, [token]);
 
   // Hide on auth pages or if not logged in
-  const hideOnRoutes = ["/login", "/signup"];
+  const hideOnRoutes = ["/login", "/signup", "/"];
   if (!token || hideOnRoutes.includes(location.pathname)) {
     return null;
   }
 
   return (
     <>
-      <div className="fixed top-4 right-4 flex items-center gap-3 z-40">
+      <div className="absolute top-4 right-4 flex items-center gap-3 z-40">
         {/* THEME TOGGLE */}
         <button
           onClick={toggleTheme}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 shadow"
+          className="topbar-btn"
+          title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
-          {theme === "dark" ? "☀️" : "🌙"}
+          {theme === "dark" ? (
+            <svg className="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          )}
         </button>
 
         {/* PROFILE AVATAR */}
         <button
           onClick={() => setShowProfile(true)}
-          className="w-10 h-10 rounded-full overflow-hidden bg-gray-300 dark:bg-gray-700 flex items-center justify-center shadow"
+          className="topbar-btn overflow-hidden p-0"
+          title="Profile"
         >
           {avatar ? (
             <img
@@ -58,19 +68,20 @@ export default function TopBar() {
               className="w-full h-full object-cover"
             />
           ) : (
-            <span>👤</span>
+            <svg className="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
           )}
         </button>
       </div>
 
-<ProfileModal
-  isOpen={showProfile}
-  onClose={() => setShowProfile(false)}
-  user={user}
-  avatar={avatar}        // 🔥 ADD THIS
-  setAvatar={setAvatar}  // 🔥 KEEP THIS
-/>
-
+      <ProfileModal
+        isOpen={showProfile}
+        onClose={() => setShowProfile(false)}
+        user={user}
+        avatar={avatar}
+        setAvatar={setAvatar}
+      />
     </>
   );
 }
