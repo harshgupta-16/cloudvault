@@ -130,8 +130,42 @@ export default function Dashboard() {
       navigate("/login");
       return;
     }
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    setUserEmail(payload.email);
+
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const expiryTime = payload.exp ? payload.exp * 1000 : payload.iat * 1000 + 7 * 24 * 60 * 60 * 1000; // 7 days
+
+      if (Date.now() >= expiryTime) {
+        // Token expired, logout and redirect
+        localStorage.removeItem("token");
+        localStorage.removeItem("avatar");
+        localStorage.removeItem("isEditingNote");
+        navigate("/login");
+        return;
+      }
+
+      setUserEmail(payload.email);
+    } catch {
+      // Invalid token, logout
+      localStorage.removeItem("token");
+      navigate("/login");
+      return;
+    }
+
+    // Prevent browser back button from going to login page
+    window.history.replaceState(null, "", "/dashboard");
+    window.history.pushState(null, "", "/dashboard");
+
+    const handlePopState = () => {
+      // Keep user on dashboard when they press back
+      window.history.pushState(null, "", "/dashboard");
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
   }, []);
 
   /* ================= NOTES ================= */

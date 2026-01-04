@@ -21,8 +21,29 @@ export default function Login() {
     const observer = new MutationObserver(checkDarkMode);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
+    // Check if already logged in with valid token
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const expiryTime = payload.exp ? payload.exp * 1000 : payload.iat * 1000 + 7 * 24 * 60 * 60 * 1000; // 7 days
+
+        if (Date.now() < expiryTime) {
+          // Token is valid, redirect to dashboard
+          navigate("/dashboard");
+        } else {
+          // Token expired, clear it
+          localStorage.removeItem("token");
+          localStorage.removeItem("avatar");
+        }
+      } catch {
+        // Invalid token, clear it
+        localStorage.removeItem("token");
+      }
+    }
+
     return () => observer.disconnect();
-  }, []);
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
