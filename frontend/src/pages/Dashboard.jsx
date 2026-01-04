@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const editorRef = useRef(null);
+  const contentRef = useRef(""); // Track content without causing re-renders
 
   const [userEmail, setUserEmail] = useState("");
 
@@ -13,6 +15,68 @@ export default function Dashboard() {
   const [activeNote, setActiveNote] = useState(null);
   const [loadingNotes, setLoadingNotes] = useState(true);
   const [titleError, setTitleError] = useState("");
+
+  // Formatting state
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+
+  // Check current formatting state
+  const checkFormatting = () => {
+    setIsBold(document.queryCommandState("bold"));
+    setIsItalic(document.queryCommandState("italic"));
+  };
+
+  // Set initial editor content when activeNote changes
+  useEffect(() => {
+    if (activeNote && editorRef.current) {
+      editorRef.current.innerHTML = activeNote.content || "";
+      contentRef.current = activeNote.content || "";
+    }
+  }, [activeNote?._id]); // Only run when switching notes, not on every content change
+
+  // Rich text formatting function
+  const formatText = (type) => {
+    if (type === "bold") {
+      document.execCommand("bold", false, null);
+    } else if (type === "italic") {
+      document.execCommand("italic", false, null);
+    }
+    // Update content ref after formatting
+    if (editorRef.current) {
+      contentRef.current = editorRef.current.innerHTML;
+      editorRef.current.focus();
+    }
+    checkFormatting();
+  };
+
+  // Handle content change - only update ref, not state
+  const handleContentChange = () => {
+    if (editorRef.current) {
+      contentRef.current = editorRef.current.innerHTML;
+    }
+  };
+
+  // Handle selection change to update formatting buttons
+  const handleSelectionChange = () => {
+    checkFormatting();
+  };
+
+  // Get current content for saving
+  const getCurrentContent = () => {
+    return editorRef.current ? editorRef.current.innerHTML : contentRef.current;
+  };
+
+  // Strip HTML tags for preview display (preserving line breaks)
+  const stripHtml = (html) => {
+    if (!html) return "";
+    // Replace block elements and br with newlines before stripping
+    let text = html
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/div>/gi, "\n")
+      .replace(/<\/p>/gi, "\n");
+    const doc = new DOMParser().parseFromString(text, "text/html");
+    return doc.body.textContent || "";
+  };
 
   // FILES STATE
   const [files, setFiles] = useState([]);
@@ -67,7 +131,7 @@ export default function Dashboard() {
             },
             body: JSON.stringify({
               title: activeNote.title,
-              content: activeNote.content,
+              content: getCurrentContent(),
             }),
           }
         );
@@ -81,7 +145,7 @@ export default function Dashboard() {
           },
           body: JSON.stringify({
             title: activeNote.title,
-            content: activeNote.content,
+            content: getCurrentContent(),
           }),
         });
       }
@@ -227,14 +291,39 @@ export default function Dashboard() {
               <p className="text-red-500 text-sm mb-3">{titleError}</p>
             )}
 
-            <textarea
-              value={activeNote.content}
-              onChange={(e) =>
-                setActiveNote({ ...activeNote, content: e.target.value })
-              }
-              placeholder="Start writing..."
-              className="dashboard-input w-full h-[60vh] resize-none mt-4"
-            />
+            {/* Text Editor with Formatting Toolbar */}
+            <div className="relative mt-4">
+              {/* Formatting Toolbar - Top Right */}
+              <div className="absolute top-2 right-2 z-10 flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => formatText("bold")}
+                  className={`format-btn ${isBold ? "format-btn-active" : ""}`}
+                  title="Bold"
+                >
+                  <span className="font-bold">B</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => formatText("italic")}
+                  className={`format-btn ${isItalic ? "format-btn-active" : ""}`}
+                  title="Italic"
+                >
+                  <span className="italic">I</span>
+                </button>
+              </div>
+
+              <div
+                ref={editorRef}
+                contentEditable
+                onInput={handleContentChange}
+                onSelect={handleSelectionChange}
+                onKeyUp={handleSelectionChange}
+                onMouseUp={handleSelectionChange}
+                className="dashboard-input rich-editor w-full h-[60vh] overflow-y-auto pt-12"
+                data-placeholder="Start writing..."
+              />
+            </div>
 
             <div className="flex justify-end mt-4">
               <button onClick={saveNote} className="dashboard-btn">
@@ -283,7 +372,7 @@ export default function Dashboard() {
                       </span>
                     </div>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 whitespace-pre-wrap line-clamp-3">
-                      {note.content || "No content"}
+                      {stripHtml(note.content) || "No content"}
                     </p>
                   </div>
                 ))}

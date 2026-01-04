@@ -1,6 +1,8 @@
 import express from "express";
-import Note from "../models/note.js";
+import mongoose from "mongoose";
+import PDFDocument from "pdfkit";
 import auth from "../middleware/auth.js";
+import Note from "../models/note.js";
 
 const router = express.Router();
 

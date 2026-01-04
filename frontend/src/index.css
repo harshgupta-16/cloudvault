@@ -984,3 +984,88 @@ div[data-type="error"] {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ========== TEXT FORMATTING BUTTONS ========== */
+.format-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #6366f1;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+}
+
+.format-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: #6366f1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.format-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.15);
+}
+
+.dark .format-btn {
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: #a5b4fc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dark .format-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25), 0 0 10px rgba(99, 102, 241, 0.1);
+}
+
+/* Active state for format buttons */
+.format-btn-active {
+  background: rgba(99, 102, 241, 0.2) !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3), 0 0 8px rgba(99, 102, 241, 0.2) !important;
+}
+
+.dark .format-btn-active {
+  background: rgba(99, 102, 241, 0.25) !important;
+  border-color: rgba(99, 102, 241, 0.6) !important;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35), 0 0 12px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* ========== RICH TEXT EDITOR ========== */
+.rich-editor {
+  outline: none;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  min-height: 200px;
+}
+
+.rich-editor:empty::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.dark .rich-editor:empty::before {
+  color: #64748b;
+}
+
+.rich-editor b,
+.rich-editor strong {
+  font-weight: 700;
+}
+
+.rich-editor i,
+.rich-editor em {
+  font-style: italic;
+}
