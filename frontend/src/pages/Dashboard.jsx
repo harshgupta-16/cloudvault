@@ -19,6 +19,8 @@ export default function Dashboard() {
   // Formatting state
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
+  const [showSizeMenu, setShowSizeMenu] = useState(false);
+  const [showColorMenu, setShowColorMenu] = useState(false);
 
   // Check current formatting state
   const checkFormatting = () => {
@@ -34,12 +36,50 @@ export default function Dashboard() {
     }
   }, [activeNote?._id]); // Only run when switching notes, not on every content change
 
+  // Update TopBar visibility based on editing state
+  useEffect(() => {
+    localStorage.setItem("isEditingNote", activeNote ? "true" : "false");
+    window.dispatchEvent(new Event("editingStateChanged"));
+
+    // Cleanup on unmount
+    return () => {
+      localStorage.setItem("isEditingNote", "false");
+      window.dispatchEvent(new Event("editingStateChanged"));
+    };
+  }, [activeNote]);
+
   // Rich text formatting function
   const formatText = (type) => {
     if (type === "bold") {
       document.execCommand("bold", false, null);
     } else if (type === "italic") {
       document.execCommand("italic", false, null);
+    } else if (type === "bullet") {
+      document.execCommand("insertText", false, "• ");
+    } else if (type === "indent") {
+      document.execCommand("insertText", false, "     "); // 5 spaces
+    } else if (type === "size-small") {
+      document.execCommand("fontSize", false, "2");
+      setShowSizeMenu(false);
+    } else if (type === "size-medium") {
+      document.execCommand("fontSize", false, "4");
+      setShowSizeMenu(false);
+    } else if (type === "size-large") {
+      document.execCommand("fontSize", false, "6");
+      setShowSizeMenu(false);
+    } else if (type === "color-default") {
+      // Use theme-aware default color
+      const isDark = document.documentElement.classList.contains("dark");
+      document.execCommand("foreColor", false, isDark ? "#ffffff" : "#1e293b");
+      setShowColorMenu(false);
+    } else if (type.startsWith("color-")) {
+      const color = type.replace("color-", "");
+      document.execCommand("foreColor", false, color);
+      setShowColorMenu(false);
+    } else if (type === "undo") {
+      document.execCommand("undo", false, null);
+    } else if (type === "redo") {
+      document.execCommand("redo", false, null);
     }
     // Update content ref after formatting
     if (editorRef.current) {
@@ -243,6 +283,15 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-container min-h-screen w-full">
+      {/* Global CloudVault Logo */}
+      <div className="absolute top-4 left-4  cloudvault-header">
+        <h1 className="cloudvault-logo inline-flex items-center gap-2">
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+          </svg>
+          CloudVault
+        </h1>
+      </div>
       {/* Animated Grid Background */}
       <div className="cyber-grid"></div>
 
@@ -259,20 +308,41 @@ export default function Dashboard() {
 
       {/* ========== NOTE EDITOR MODE ========== */}
       {activeNote ? (
-        <div className="relative z-10 p-6">
+        <div className="relative z-10 p-6 pt-16">
           <div className="glass-card p-6 max-w-4xl mx-auto">
-            <button
-              onClick={() => {
-                setActiveNote(null);
-                setTitleError("");
-              }}
-              className="dashboard-btn-secondary mb-4 flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back
-            </button>
+            {/* Top bar with Back and Undo/Redo */}
+            <div className="flex justify-between items-center mb-4">
+              <button
+                onClick={() => {
+                  setActiveNote(null);
+                  setTitleError("");
+                }}
+                className="dashboard-btn-secondary flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back
+              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => formatText("undo")}
+                  className="dashboard-btn-secondary flex items-center gap-1"
+                  title="Undo"
+                >
+                  <span>↩</span> Undo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => formatText("redo")}
+                  className="dashboard-btn-secondary flex items-center gap-1"
+                  title="Redo"
+                >
+                  <span>↪</span> Redo
+                </button>
+              </div>
+            </div>
 
             <input
               value={activeNote.title}
@@ -311,6 +381,82 @@ export default function Dashboard() {
                 >
                   <span className="italic">I</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => formatText("bullet")}
+                  className="format-btn"
+                  title="Bullet Point"
+                >
+                  <span>•</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => formatText("indent")}
+                  className="format-btn"
+                  title="Indent (5 spaces)"
+                >
+                  <span>⇥</span>
+                </button>
+                {/* Text Size Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowSizeMenu(!showSizeMenu)}
+                    className="format-btn"
+                    title="Text Size"
+                  >
+                    <span className="text-xs">A</span>
+                    <span className="text-sm font-bold">A</span>
+                  </button>
+                  {showSizeMenu && (
+                    <div className="size-dropdown">
+                      <button
+                        type="button"
+                        onClick={() => formatText("size-small")}
+                        className="size-option text-xs"
+                      >
+                        Small
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => formatText("size-medium")}
+                        className="size-option text-sm"
+                      >
+                        Medium
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => formatText("size-large")}
+                        className="size-option text-lg"
+                      >
+                        Large
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {/* Color Picker Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowColorMenu(!showColorMenu)}
+                    className="format-btn"
+                    title="Text Color"
+                  >
+                    <span className="color-icon">A</span>
+                  </button>
+                  {showColorMenu && (
+                    <div className="color-dropdown">
+                      <button type="button" onClick={() => formatText("color-#ef4444")} className="color-swatch" style={{ background: "#ef4444" }} title="Red" />
+                      <button type="button" onClick={() => formatText("color-#f97316")} className="color-swatch" style={{ background: "#f97316" }} title="Orange" />
+                      <button type="button" onClick={() => formatText("color-#eab308")} className="color-swatch" style={{ background: "#eab308" }} title="Yellow" />
+                      <button type="button" onClick={() => formatText("color-#22c55e")} className="color-swatch" style={{ background: "#22c55e" }} title="Green" />
+                      <button type="button" onClick={() => formatText("color-#3b82f6")} className="color-swatch" style={{ background: "#3b82f6" }} title="Blue" />
+                      <button type="button" onClick={() => formatText("color-#8b5cf6")} className="color-swatch" style={{ background: "#8b5cf6" }} title="Purple" />
+                      <button type="button" onClick={() => formatText("color-#ec4899")} className="color-swatch" style={{ background: "#ec4899" }} title="Pink" />
+                      <button type="button" onClick={() => formatText("color-default")} className="color-swatch color-swatch-default" title="Default" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div
@@ -339,7 +485,7 @@ export default function Dashboard() {
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="section-title flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 dark:text-white " fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 My Notes
@@ -383,7 +529,7 @@ export default function Dashboard() {
           {/* FILES SECTION */}
           <div className="glass-card p-5">
             <h3 className="section-title flex items-center gap-2 mb-4">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
               </svg>
               Cloud Files

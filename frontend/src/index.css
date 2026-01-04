@@ -592,52 +592,44 @@ body.dark {
 }
 
 /* ========== FUTURISTIC TOAST STYLES ========== */
-/* Fix toast container - remove any visible wrapper */
-div[style*="position: fixed"][style*="z-index: 9999"],
-.react-hot-toast,
-div[role="region"][aria-label*="notification"] {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
+/* CSS Variables for toast theming */
+:root {
+  --toast-bg: rgba(255, 255, 255, 0.95);
+  --toast-color: #1e293b;
+  --toast-border: rgba(99, 102, 241, 0.25);
+  --toast-shadow: 0 0 20px rgba(99, 102, 241, 0.1), 0 10px 30px rgba(0, 0, 0, 0.1);
+  --toast-icon-bg: #ffffff;
 }
 
-/* Targeting react-hot-toast */
-[data-sonner-toast],
-div[role="status"] {
-  font-family: inherit !important;
+.dark {
+  --toast-bg: rgba(15, 23, 42, 0.95);
+  --toast-color: #f1f5f9;
+  --toast-border: rgba(99, 102, 241, 0.3);
+  --toast-shadow: 0 0 30px rgba(99, 102, 241, 0.2), 0 10px 40px rgba(0, 0, 0, 0.3);
+  --toast-icon-bg: #0f172a;
+}
+
+/* Futuristic toast styling */
+.futuristic-toast {
+  background: var(--toast-bg) !important;
+  color: var(--toast-color) !important;
+  border: 1px solid var(--toast-border) !important;
+  box-shadow: var(--toast-shadow) !important;
 }
 
 /* Success toast */
-.go4109123758[style*="--accent-color: #34d399"],
-div[data-type="success"] {
+.futuristic-toast[style*="--accent-color: #34d399"] {
   border-color: rgba(52, 211, 153, 0.4) !important;
-  box-shadow:
-    0 0 30px rgba(52, 211, 153, 0.2),
-    0 10px 40px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* Error toast */
-.go4109123758[style*="--accent-color: #f87171"],
-div[data-type="error"] {
+.futuristic-toast[style*="--accent-color: #f87171"] {
   border-color: rgba(248, 113, 113, 0.4) !important;
-  box-shadow:
-    0 0 30px rgba(248, 113, 113, 0.2),
-    0 10px 40px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* Toast icon styling */
-.go4109123758>div:first-child {
-  filter: drop-shadow(0 0 8px currentColor);
-}
-
-/* Light mode toasts */
-:root:not(.dark) .go4109123758 {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 1px solid rgba(99, 102, 241, 0.2) !important;
-  color: #1e293b !important;
-  box-shadow:
-    0 0 20px rgba(99, 102, 241, 0.1),
-    0 10px 40px rgba(0, 0, 0, 0.1) !important;
+.futuristic-toast>div:first-child {
+  filter: drop-shadow(0 0 6px currentColor);
 }
 
 
@@ -902,6 +894,20 @@ div[data-type="error"] {
   border-color: rgba(99, 102, 241, 0.4);
 }
 
+/* Mobile responsive - smaller topbar buttons */
+@media (max-width: 640px) {
+  .topbar-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .topbar-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
 /* ========== MODAL STYLES ========== */
 .modal-glass {
   background: rgba(255, 255, 255, 0.95);
@@ -1042,6 +1048,112 @@ div[data-type="error"] {
   box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35), 0 0 12px rgba(99, 102, 241, 0.2) !important;
 }
 
+/* Text Size Dropdown */
+.size-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+  overflow: hidden;
+  z-index: 20;
+  min-width: 90px;
+}
+
+.dark .size-dropdown {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.size-option {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #4b5563;
+  transition: all 0.2s ease;
+}
+
+.size-option:hover {
+  background: rgba(99, 102, 241, 0.15);
+  color: #6366f1;
+}
+
+.dark .size-option {
+  color: #e2e8f0;
+}
+
+.dark .size-option:hover {
+  background: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+}
+
+/* Color Picker Dropdown */
+.color-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+  padding: 8px;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.dark .color-dropdown {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.color-swatch:hover {
+  transform: scale(1.15);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.color-swatch-default {
+  background: #1e293b;
+  border: 2px solid rgba(99, 102, 241, 0.3);
+}
+
+.dark .color-swatch-default {
+  background: #ffffff;
+}
+
+.color-icon {
+  background: linear-gradient(135deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
 /* ========== RICH TEXT EDITOR ========== */
 .rich-editor {
   outline: none;
@@ -1068,4 +1180,63 @@ div[data-type="error"] {
 .rich-editor i,
 .rich-editor em {
   font-style: italic;
+}
+
+/* ========== CLOUDVAULT LOGO ========== */
+.cloudvault-logo {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 4s ease-in-out infinite;
+  text-shadow: none;
+  filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.3));
+}
+
+.cloudvault-logo svg {
+  stroke: url(#logoGradient);
+  filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.4));
+}
+
+/* Fallback for SVG stroke */
+.cloudvault-logo svg {
+  stroke: #8b5cf6;
+}
+
+@keyframes gradientShift {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.cloudvault-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.cloudvault-header .cloudvault-logo {
+  pointer-events: auto;
+}
+
+/* Mobile responsive - smaller topbar buttons */
+@media (max-width: 640px) {
+  .cloudvault-header {
+    text-align: left;
+  }
 }

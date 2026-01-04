@@ -9,6 +9,7 @@ export default function TopBar() {
 
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [avatar, setAvatar] = useState(() => {
     return localStorage.getItem("avatar");
@@ -29,9 +30,28 @@ export default function TopBar() {
     } catch { }
   }, [token]);
 
-  // Hide on auth pages or if not logged in
+  // Listen for editing state changes
+  useEffect(() => {
+    const checkEditing = () => {
+      setIsEditing(localStorage.getItem("isEditingNote") === "true");
+    };
+
+    checkEditing();
+    window.addEventListener("storage", checkEditing);
+
+    // Also listen for custom event for same-tab updates
+    const handleEditingChange = () => checkEditing();
+    window.addEventListener("editingStateChanged", handleEditingChange);
+
+    return () => {
+      window.removeEventListener("storage", checkEditing);
+      window.removeEventListener("editingStateChanged", handleEditingChange);
+    };
+  }, []);
+
+  // Hide on auth pages, if not logged in, or if editing a note
   const hideOnRoutes = ["/login", "/signup", "/"];
-  if (!token || hideOnRoutes.includes(location.pathname)) {
+  if (!token || hideOnRoutes.includes(location.pathname) || isEditing) {
     return null;
   }
 
