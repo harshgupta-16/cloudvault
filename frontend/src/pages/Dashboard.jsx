@@ -7,6 +7,7 @@ export default function Dashboard() {
   const token = localStorage.getItem("token");
   const editorRef = useRef(null);
   const contentRef = useRef(""); // Track content without causing re-renders
+  const touchStartX = useRef(0); // For swipe gesture tracking
 
   const [userEmail, setUserEmail] = useState("");
 
@@ -236,6 +237,76 @@ export default function Dashboard() {
     }
   };
 
+  // Auto-save and go back (for swipe gesture)
+  const autoSaveAndGoBack = async () => {
+    if (!activeNote) return;
+
+    const currentContent = getCurrentContent();
+    const hasTitle = activeNote.title && activeNote.title.trim();
+    const hasContent = currentContent && currentContent.trim();
+
+    // Only auto-save if there's content to save
+    if (hasTitle || hasContent) {
+      try {
+        const titleToSave = activeNote.title?.trim() || "Untitled Note";
+
+        if (activeNote._id) {
+          // UPDATE existing note
+          await fetch(
+            `${import.meta.env.VITE_BACKEND_URL}/notes/${activeNote._id}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token,
+              },
+              body: JSON.stringify({
+                title: titleToSave,
+                content: currentContent,
+              }),
+            }
+          );
+        } else if (hasContent) {
+          // CREATE new note only if has content
+          await fetch(`${import.meta.env.VITE_BACKEND_URL}/notes`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token,
+            },
+            body: JSON.stringify({
+              title: titleToSave,
+              content: currentContent,
+            }),
+          });
+        }
+
+        toast.success("Note auto-saved");
+        await loadNotes();
+      } catch (err) {
+        console.error("Auto-save failed:", err);
+      }
+    }
+
+    setActiveNote(null);
+    setTitleError("");
+  };
+
+  // Swipe gesture handlers
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const swipeDistance = touchEndX - touchStartX.current;
+
+    // If swiped right more than 100px, go back with auto-save
+    if (swipeDistance > 100) {
+      autoSaveAndGoBack();
+    }
+  };
+
   /* ================= FILES ================= */
 
   const loadFiles = async () => {
@@ -342,15 +413,16 @@ export default function Dashboard() {
 
       {/* ========== NOTE EDITOR MODE ========== */}
       {activeNote ? (
-        <div className="relative z-10 p-6 pt-16">
+        <div
+          className="relative z-10 p-6 pt-16"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           <div className="glass-card p-6 max-w-4xl mx-auto">
             {/* Top bar with Back and Undo/Redo */}
             <div className="flex justify-between items-center mb-4">
               <button
-                onClick={() => {
-                  setActiveNote(null);
-                  setTitleError("");
-                }}
+                onClick={autoSaveAndGoBack}
                 className="dashboard-btn-secondary flex items-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -398,7 +470,7 @@ export default function Dashboard() {
             {/* Text Editor with Formatting Toolbar */}
             <div className="relative mt-4">
               {/* Formatting Toolbar - Top Right */}
-              <div className="absolute top-2 right-2 z-10 flex gap-1">
+              <div className="absolute top-[-45px] right-2 z-10 flex gap-1">
                 <button
                   type="button"
                   onClick={() => formatText("bold")}
@@ -500,7 +572,7 @@ export default function Dashboard() {
                 onSelect={handleSelectionChange}
                 onKeyUp={handleSelectionChange}
                 onMouseUp={handleSelectionChange}
-                className="dashboard-input rich-editor w-full h-[60vh] overflow-y-auto pt-12"
+                className="dashboard-input rich-editor w-full h-[55vh] overflow-y-auto mt-12 pt-14"
                 data-placeholder="Start writing..."
               />
             </div>
