@@ -5,12 +5,23 @@ import Dashboard from "./pages/Dashboard";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./context/ThemeContext";
 import TopBar from "./components/Topbar";
+import { useEffect } from "react";
+import { enablePersistence } from "./utils/persistentStorage";
+import { usePWAUpdate } from "./hooks/usePWAUpdate";
+import PWAUpdateBanner from "./components/PWAUpdateBanner";
 
 
 export default function App() {
+
+  const { updateAvailable, refreshApp } = usePWAUpdate();
+
   return (
     <ThemeProvider>
       <BrowserRouter>
+
+        {updateAvailable && (
+          <PWAUpdateBanner onRefresh={refreshApp} />
+        )}
 
         <TopBar />
 
