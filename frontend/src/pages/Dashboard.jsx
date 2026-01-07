@@ -228,6 +228,7 @@ export default function Dashboard() {
             body: JSON.stringify({
               title: activeNote.title,
               content: getCurrentContent(),
+              isLocked: activeNote.isLocked || false,
             }),
           }
         );
@@ -242,6 +243,7 @@ export default function Dashboard() {
           body: JSON.stringify({
             title: activeNote.title,
             content: getCurrentContent(),
+            isLocked: activeNote.isLocked || false,
           }),
         });
       }
@@ -316,6 +318,7 @@ export default function Dashboard() {
               body: JSON.stringify({
                 title: titleToSave,
                 content: currentContent,
+                isLocked: activeNote.isLocked || false,
               }),
             }
           );
@@ -330,6 +333,7 @@ export default function Dashboard() {
             body: JSON.stringify({
               title: titleToSave,
               content: currentContent,
+              isLocked: activeNote.isLocked || false,
             }),
           });
         }
@@ -508,14 +512,16 @@ export default function Dashboard() {
             <input
               value={activeNote.title}
               onChange={(e) => {
+                if (activeNote?.isLocked) return;
                 setActiveNote({ ...activeNote, title: e.target.value });
                 if (e.target.value.trim()) setTitleError("");
               }}
               placeholder="Title"
+              disabled={activeNote?.isLocked}
               className={`w-full text-2xl font-semibold bg-transparent border-b-2 mb-1 pb-2 outline-none transition-colors ${titleError
                 ? "border-red-500"
                 : "border-indigo-200 dark:border-indigo-500/30 focus:border-indigo-500"
-                } text-slate-800 dark:text-white`}
+                } text-slate-800 dark:text-white ${activeNote?.isLocked ? "opacity-70 cursor-not-allowed" : ""}`}
             />
 
             {titleError && (
@@ -548,7 +554,7 @@ export default function Dashboard() {
                   className="format-btn"
                   title="Bullet Point"
                 >
-                  <span>•</span>
+                  <span className="text-2xl">•</span>
                 </button>
                 <button
                   type="button"
@@ -643,7 +649,7 @@ export default function Dashboard() {
 
               <div
                 ref={editorRef}
-                contentEditable
+                contentEditable={!activeNote?.isLocked}
                 onInput={handleContentChange}
                 onSelect={handleSelectionChange}
                 onKeyUp={handleSelectionChange}
@@ -653,12 +659,33 @@ export default function Dashboard() {
                   setShowColorMenu(false);
                   setShowHighlightMenu(false);
                 }}
-                className="dashboard-input rich-editor w-full h-[65vh] overflow-y-auto mt-12 pt-14"
+                className={`dashboard-input rich-editor w-full h-[65vh] overflow-y-auto mt-12 pt-14 ${activeNote?.isLocked ? "opacity-70 cursor-not-allowed" : ""}`}
                 data-placeholder="Start writing..."
               />
             </div>
 
-            <div className="flex justify-end mt-4">
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => setActiveNote({ ...activeNote, isLocked: !activeNote?.isLocked })}
+                className={`dashboard-btn-secondary flex items-center gap-2 ${activeNote?.isLocked ? "bg-amber-500/20 border-amber-500/50 text-amber-400" : ""}`}
+                title={activeNote?.isLocked ? "Unlock note" : "Lock note"}
+              >
+                {activeNote?.isLocked ? (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Locked
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                    </svg>
+                    Lock
+                  </>
+                )}
+              </button>
               <button onClick={saveNote} className="dashboard-btn">
                 Save Note
               </button>

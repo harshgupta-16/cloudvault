@@ -8,8 +8,8 @@ const router = express.Router();
 
 // Create Note
 router.post("/", auth, async (req, res) => {
-  const { title, content } = req.body;
-  const note = await Note.create({ userId: req.userId, title, content });
+  const { title, content, isLocked } = req.body;
+  const note = await Note.create({ userId: req.userId, title, content, isLocked: isLocked || false });
   res.json(note);
 });
 
@@ -21,10 +21,14 @@ router.get("/", auth, async (req, res) => {
 
 // Update Note
 router.put("/:id", auth, async (req, res) => {
-  const { title, content } = req.body;
+  const { title, content, isLocked } = req.body;
+  const updateData = { title, content };
+  if (typeof isLocked === 'boolean') {
+    updateData.isLocked = isLocked;
+  }
   const note = await Note.findOneAndUpdate(
     { _id: req.params.id, userId: req.userId },
-    { title, content },
+    updateData,
     { new: true }
   );
   res.json(note);

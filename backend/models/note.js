@@ -18,6 +18,10 @@ const noteSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  isLocked: {
+    type: Boolean,
+    default: false,
+  },
 }, { timestamps: true });
 
 export default mongoose.model("note", noteSchema);
