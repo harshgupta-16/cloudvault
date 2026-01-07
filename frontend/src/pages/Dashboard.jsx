@@ -16,12 +16,14 @@ export default function Dashboard() {
   const [activeNote, setActiveNote] = useState(null);
   const [loadingNotes, setLoadingNotes] = useState(true);
   const [titleError, setTitleError] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // Note ID to delete
 
   // Formatting state
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
   const [showSizeMenu, setShowSizeMenu] = useState(false);
   const [showColorMenu, setShowColorMenu] = useState(false);
+  const [showHighlightMenu, setShowHighlightMenu] = useState(false);
 
   // Check current formatting state
   const checkFormatting = () => {
@@ -77,6 +79,25 @@ export default function Dashboard() {
       const color = type.replace("color-", "");
       document.execCommand("foreColor", false, color);
       setShowColorMenu(false);
+    } else if (type.startsWith("highlight-")) {
+      const selection = window.getSelection();
+      // Only apply highlight if there's actually selected text
+      if (!selection || selection.isCollapsed) {
+        setShowHighlightMenu(false);
+        return;
+      }
+
+      const color = type.replace("highlight-", "");
+      document.execCommand("hiliteColor", false, color);
+      // Set text color to black for readability on colored background
+      if (color !== "transparent") {
+        document.execCommand("foreColor", false, "#1e293b");
+      }
+      // Collapse selection and insert a zero-width space with no formatting
+      selection.collapseToEnd();
+      // Insert zero-width space to break formatting chain
+      document.execCommand("insertHTML", false, '<span style="background:transparent;color:inherit">&#8203;</span>');
+      setShowHighlightMenu(false);
     } else if (type === "undo") {
       document.execCommand("undo", false, null);
     } else if (type === "redo") {
@@ -237,6 +258,38 @@ export default function Dashboard() {
     }
   };
 
+  // Delete a note - show confirmation modal
+  const deleteNote = (noteId, e) => {
+    e.stopPropagation(); // Prevent opening the note when clicking delete
+    setDeleteConfirm(noteId);
+  };
+
+  // Confirm and execute delete
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/notes/${deleteConfirm}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: "Bearer " + token,
+          },
+        }
+      );
+
+      if (!res.ok) throw new Error("Delete failed");
+
+      toast.success("Note deleted");
+      loadNotes();
+    } catch (err) {
+      toast.error("Error deleting note");
+      console.error(err);
+    }
+    setDeleteConfirm(null);
+  };
+
   // Auto-save and go back (for swipe gesture)
   const autoSaveAndGoBack = async () => {
     if (!activeNote) return;
@@ -388,15 +441,17 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-container min-h-screen w-full">
-      {/* Global CloudVault Logo */}
-      <div className="absolute top-4 left-4  cloudvault-header">
-        <h1 className="cloudvault-logo inline-flex items-center gap-2">
-          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-          </svg>
-          CloudVault
-        </h1>
-      </div>
+      {/* Global CloudVault Logo - only show on dashboard, not during note editing */}
+      {!activeNote && (
+        <div className="absolute top-4 left-4  cloudvault-header">
+          <h1 className="cloudvault-logo inline-flex items-center gap-2">
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+            </svg>
+            CloudVault
+          </h1>
+        </div>
+      )}
       {/* Animated Grid Background */}
       <div className="cyber-grid"></div>
 
@@ -414,11 +469,11 @@ export default function Dashboard() {
       {/* ========== NOTE EDITOR MODE ========== */}
       {activeNote ? (
         <div
-          className="relative z-10 p-6 pt-16"
+          className="relative z-10 p-4"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="glass-card p-6 max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             {/* Top bar with Back and Undo/Redo */}
             <div className="flex justify-between items-center mb-4">
               <button
@@ -503,6 +558,27 @@ export default function Dashboard() {
                 >
                   <span>⇥</span>
                 </button>
+                {/* Highlight Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowHighlightMenu(!showHighlightMenu)}
+                    className="format-btn"
+                    title="Highlight"
+                  >
+                    <span className="text-yellow-400">🖍</span>
+                  </button>
+                  {showHighlightMenu && (
+                    <div className="color-dropdown">
+                      <button type="button" onClick={() => formatText("highlight-#fef08a")} className="color-swatch" style={{ background: "#fef08a" }} title="Yellow" />
+                      <button type="button" onClick={() => formatText("highlight-#bbf7d0")} className="color-swatch" style={{ background: "#bbf7d0" }} title="Green" />
+                      <button type="button" onClick={() => formatText("highlight-#bfdbfe")} className="color-swatch" style={{ background: "#bfdbfe" }} title="Blue" />
+                      <button type="button" onClick={() => formatText("highlight-#fbcfe8")} className="color-swatch" style={{ background: "#fbcfe8" }} title="Pink" />
+                      <button type="button" onClick={() => formatText("highlight-#fed7aa")} className="color-swatch" style={{ background: "#fed7aa" }} title="Orange" />
+                      <button type="button" onClick={() => formatText("highlight-transparent")} className="color-swatch color-swatch-default" title="Clear" />
+                    </div>
+                  )}
+                </div>
                 {/* Text Size Dropdown */}
                 <div className="relative">
                   <button
@@ -572,7 +648,12 @@ export default function Dashboard() {
                 onSelect={handleSelectionChange}
                 onKeyUp={handleSelectionChange}
                 onMouseUp={handleSelectionChange}
-                className="dashboard-input rich-editor w-full h-[55vh] overflow-y-auto mt-12 pt-14"
+                onClick={() => {
+                  setShowSizeMenu(false);
+                  setShowColorMenu(false);
+                  setShowHighlightMenu(false);
+                }}
+                className="dashboard-input rich-editor w-full h-[65vh] overflow-y-auto mt-12 pt-14"
                 data-placeholder="Start writing..."
               />
             </div>
@@ -613,9 +694,19 @@ export default function Dashboard() {
                   <div
                     key={note._id}
                     onClick={() => setActiveNote(note)}
-                    className="note-card"
+                    className="note-card relative group"
                   >
-                    <div className="flex justify-between items-start gap-2">
+                    {/* Delete button - always visible */}
+                    <button
+                      onClick={(e) => deleteNote(note._id, e)}
+                      className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors"
+                      title="Delete note"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                    <div className="flex justify-between items-start gap-2 pr-8">
                       <h3 className="font-semibold truncate max-w-[70%] text-slate-800 dark:text-white">
                         {note.title}
                       </h3>
@@ -710,6 +801,41 @@ export default function Dashboard() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
         </button>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setDeleteConfirm(null)}
+          />
+          <div className="modal-glass relative z-10 p-6 max-w-sm w-full text-center">
+            <svg className="w-12 h-12 mx-auto mb-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">
+              Delete Note?
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 mb-6">
+              Are you sure you want to delete this note? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="dashboard-btn-secondary px-6"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
