@@ -1,46 +1,35 @@
-const CACHE_NAME = "cloudvault-v2";
+const CACHE_NAME = "cloudvault-v3";
 
-const STATIC_ASSETS = [
-    "/",
-    "/index.html",
-    "/manifest.json"
-];
+self.addEventListener("install", () => self.skipWaiting());
 
-// Install
-self.addEventListener("install", (event) => {
+self.addEventListener("activate", (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+        caches.keys().then((keys) =>
+            Promise.all(
+                keys.map((key) => {
+                    if (key !== CACHE_NAME) return caches.delete(key);
+                })
+            )
+        )
     );
-    self.skipWaiting();
+    self.clients.claim();
 });
 
-// Activate
-self.addEventListener("activate", () => {
-    clients.claim();
-});
-
-// Fetch
 self.addEventListener("fetch", (event) => {
     if (event.request.method !== "GET") return;
 
+    // Always fetch JS & CSS fresh
+    if (
+        event.request.destination === "script" ||
+        event.request.destination === "style"
+    ) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request).then((cached) => {
-            return (
-                cached ||
-                fetch(event.request).catch(() => {
-                    // fallback for navigation
-                    if (event.request.mode === "navigate") {
-                        return caches.match("/");
-                    }
-                })
-            );
+            return cached || fetch(event.request);
         })
     );
-});
-
-
-self.addEventListener("message", (event) => {
-    if (event.data === "SKIP_WAITING") {
-        self.skipWaiting();
-    }
 });
