@@ -119,7 +119,7 @@ export default function Login() {
           {/* Email Input */}
           <div className="input-group relative">
             <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-              Email Address
+              Email Addres
             </label>
             <div className="relative">
               <svg className="input-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
